@@ -4,7 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Three.js Scene</title>
+    
+
     <style>
+
+        .loadingscreen{
+            background-color : black;
+            position: absolute;
+            height: 100%;
+             width: 100%;
+            opacity:1;
+        }
+
+        .is-loaded{
+            opacity: 0;
+            transition-duration: 3s;
+        }
+    
+
         body {
             margin: 0;
             overflow: hidden;
@@ -49,7 +66,20 @@
     </style>
 </head>
 <body>
+
+
+
+    <div id="loadingscreen" class="loadingscreen">
+        <div style="text-align : center; margin-top : 10%;">
+        <img width=50%
+        class="fit-picture"
+        src="logo.png"
+        alt="Grapefruit slice atop a pile of other slices" />
+        </div>
+    </div>
+
     <div id="container"></div>
+
     <div class="arrow left-arrow" onclick="changeObject(-1)" id="leftArrow"></div>
     <div class="arrow right-arrow" onclick="changeObject(1)" id="rightArrow"><h class="centered">O</h></div>
 
@@ -79,7 +109,6 @@
 
         function init() {
   
-
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 4;
             camera.rotation.z = 0.3; // Inclinaison vers la droite
@@ -180,6 +209,10 @@
             sunLight.position.set(-2, 0.5, 1.5);
             scene.add(sunLight);
 		document.addEventListener('mousemove', onMouseMove);
+
+        const manager = new THREE.LoadingManager( onload=function ( ) {document.getElementById('loadingscreen').classList.add('is-loaded');});
+        
+        
         }
         
 	    function onMouseMove(event) {
@@ -191,7 +224,7 @@
 
 
             camera.lookAt(scene.position);
-	    camera.rotation.z = 0.3;
+	        camera.rotation.z = 0.3;
         }
 
         function animate() {
@@ -242,7 +275,7 @@
                 new TWEEN.Tween(object.position)
                     .to({ x: targetX, z: targetZ }, 1000) // Duration: 1000 milliseconds (1 second)
                     .easing(TWEEN.Easing.Quadratic.Out) // Smooth transition
-                    .onComplete(() => { isAnimating = false; }) // Animation complete callback
+                    .onComplete(() => { }) // Animation complete callback
                     .start(); // Start the animation
 
 
@@ -250,7 +283,6 @@
                     .to({ z: camera.position.z +0.5 }, 600) // Duration: 1000 milliseconds (1 second)
                     .easing(TWEEN.Easing.Quadratic.Out) // Smooth transition
                     .onComplete(() => { 
-                        isAnimating = false; 
                         new TWEEN.Tween(camera.position)
                         .to({ z: camera.position.z -0.5 }, 600) // Duration: 1000 milliseconds (1 second)
                         .easing(TWEEN.Easing.Quadratic.Out) // Smooth transition
