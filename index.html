@@ -104,6 +104,16 @@
         scene.background = texture;
         var parent = new THREE.Object3D();
 
+
+        let buffer,buffercolor;
+        var raycaster = new THREE.Raycaster();
+        var mouse = {
+            x: 0,
+            y: 0
+        },
+        INTERSECTED;
+
+
         init();
         animate();
 
@@ -225,6 +235,36 @@
 
             camera.lookAt(scene.position);
 	        camera.rotation.z = 0.3;
+
+
+              // create a Ray with origin at the mouse position
+                //   and direction into the scene (camera direction)
+                var mouse = new THREE.Vector2();
+                mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+                mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+                var raycaster = new THREE.Raycaster();
+                raycaster.setFromCamera( mouse, camera );
+                var intersects = raycaster.intersectObjects(objects, false);
+                
+                if(intersects.length > 0) {
+
+                    if (!intersects[0].object.originalColor) {
+                    intersects[0].object.originalColor = intersects[0].object.material.color.clone();
+                    }
+                    console.log(intersects[0].object);
+                    intersects[0].object.material.color.setHex( 0xff9a00 );
+                } 
+                else 
+                {
+                    objects.forEach(object => {
+        if (object.originalColor) {
+            object.material.color.copy(object.originalColor);
+            delete object.originalColor; // Supprimez la propriété originalColor pour libérer la mémoire
+        }
+    });
+                }
+                
         }
 
         function animate() {
@@ -354,7 +394,8 @@ function getFresnelMat({rimHex = 0x0088ff, facingHex = 0x000000} = {})
   });
   return fresnelMat;
 }
-        
+
+     
     </script>
 </body>
 </html>
