@@ -33,7 +33,7 @@
         background-color: white;
         }
 
-        .arrow:focus {
+        .arrow:active {
             background-color:grey;
         }
 
@@ -42,7 +42,7 @@
         }
 
         .centered {
-            display: inline-block;
+            width: 100px;
             margin-left: auto;
             margin-right: auto;
         }
@@ -51,7 +51,7 @@
 <body>
     <div id="container"></div>
     <div class="arrow left-arrow" onclick="changeObject(-1)" id="leftArrow"></div>
-    <div class="arrow right-arrow" onclick="changeObject(1)" id="rightArrow"></div>
+    <div class="arrow right-arrow" onclick="changeObject(1)" id="rightArrow"><h class="centered">O</h></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -244,6 +244,24 @@
                     .easing(TWEEN.Easing.Quadratic.Out) // Smooth transition
                     .onComplete(() => { isAnimating = false; }) // Animation complete callback
                     .start(); // Start the animation
+
+
+                new TWEEN.Tween(camera.position)
+                    .to({ z: camera.position.z +0.5 }, 600) // Duration: 1000 milliseconds (1 second)
+                    .easing(TWEEN.Easing.Quadratic.Out) // Smooth transition
+                    .onComplete(() => { 
+                        isAnimating = false; 
+                        new TWEEN.Tween(camera.position)
+                        .to({ z: camera.position.z -0.5 }, 600) // Duration: 1000 milliseconds (1 second)
+                        .easing(TWEEN.Easing.Quadratic.Out) // Smooth transition
+                        .onComplete(() => { isAnimating = false; }) // Animation complete callback
+                        .start(); // Start the animation
+                    
+                    
+                    }) // Animation complete callback
+                    .start(); // Start the animation
+            
+
             });
         }
 
