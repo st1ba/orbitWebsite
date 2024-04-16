@@ -294,6 +294,7 @@
             TWEEN.update();
 
             // Render scene
+            renderer.setPixelRatio( window.devicePixelRatio );
             renderer.render(scene, camera);
 
         }
