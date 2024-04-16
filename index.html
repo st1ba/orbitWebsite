@@ -227,10 +227,14 @@
         
 	    function onMouseMove(event) {
             // Calculate camera position based on mouse position
+            
+            
             let mouseX = (event.clientX / window.innerWidth) * 2 - 1;
             let mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-            camera.position.x = mouseX * 0.25;
-            camera.position.y = mouseY * 0.25;
+            if (/Android|BlackBerry|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) === false) {
+                camera.position.x = mouseX * 0.25;
+                camera.position.y = mouseY * 0.25;
+            }
 
 
             camera.lookAt(scene.position);
