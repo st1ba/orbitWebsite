@@ -83,6 +83,7 @@
     <div class="arrow left-arrow" onclick="changeObject(-1)" id="leftArrow"></div>
     <div class="arrow right-arrow" onclick="changeObject(1)" id="rightArrow"><h class="centered">O</h></div>
 
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/23.1.1/tween.umd.js" integrity="sha512-J8rv5Qz++2kwDP7YUBqxm3LCtPXWghcqXvxPrLrk81E31eMA/tEAjKakXJJDQoy9tj+41+EDYDsD6Xc76lnT7w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -106,12 +107,12 @@
         var planet3hover = Boolean();
         var islandhover = Boolean();
 
-        const texture = new THREE.TextureLoader().load( "space.png" );
+        // const texture = new THREE.TextureLoader().load( "space.png" );
         const loader = new THREE.GLTFLoader();
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set( 1, 1 );
-        scene.background = texture;
+        // texture.wrapS = THREE.RepeatWrapping;
+        // texture.wrapT = THREE.RepeatWrapping;
+        // texture.repeat.set( 1, 1 );
+        // scene.background = texture;
         var parent = new THREE.Object3D();
 
 
@@ -128,7 +129,11 @@
         animate();
 
         function init() {
-  
+
+
+            let stars = getStarfield({numStars: 2000});
+            scene.add(stars);
+            
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 4;
             camera.rotation.z = 0.3; // Inclinaison vers la droite
@@ -167,7 +172,7 @@
             earthGroup.add(lightsMesh);
 
 
-            const cloudsMat = new THREE.MeshStandardMaterial({
+            let cloudsMat = new THREE.MeshStandardMaterial({
             map: new THREE.TextureLoader().load("earth_cloudmap.jpg"),
             transparent: true,
             opacity: 0.7,
@@ -175,7 +180,7 @@
             alphaMap: new THREE.TextureLoader().load("earth_cloudmaptrans.jpg"),
             //alphaTest: 0.1,
             });
-            const cloudsMesh = new THREE.Mesh(planetGeometry, cloudsMat);
+            let cloudsMesh = new THREE.Mesh(planetGeometry, cloudsMat);
             cloudsMesh.scale.setScalar(1.01);
             earthGroup.add(cloudsMesh);
             // Colors for objects
@@ -246,6 +251,30 @@
             satellite = new THREE.Mesh(geometry, mat);
             scene.add(satellite);
 
+            mat = new THREE.MeshPhongMaterial( {
+    		map: new THREE.TextureLoader().load("venus_texture.jpg"), bumpMap: new THREE.TextureLoader("venus_bump.jpg") } );
+            objects[0].material=mat;
+            // cloudsMat = new THREE.MeshStandardMaterial({
+            // map: new THREE.TextureLoader().load("earth_cloudmap.jpg"),
+            // transparent: true,
+            // opacity: 0.7,
+            // blending: THREE.AdditiveBlending,
+            // alphaMap: new THREE.TextureLoader().load("earth_cloudmaptrans.jpg"),
+            // //alphaTest: 0.1,
+            // });
+            // cloudsMesh = new THREE.Mesh(planetGeometry, cloudsMat);
+            // cloudsMesh.scale.setScalar(1.01);
+            // objects[0].Object3D.attach(cloudsMesh);
+            // // Colors for objects
+
+
+            mat = new THREE.MeshPhongMaterial( {
+    		map: new THREE.TextureLoader().load("neptune_texture.jpg") } );
+            objects[1].material=mat;
+
+            mat = new THREE.MeshPhongMaterial( {
+    		map: new THREE.TextureLoader().load("frozen_texture.jpg") } );
+            objects[2].material=mat;
 
             const sunLight = new THREE.DirectionalLight(0xffffff);
             sunLight.position.set(-2, 0.5, 1.5);
@@ -353,8 +382,8 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            texture.offset.x = camera.position.x / 50; // Ajustez le décalage x selon vos besoins
-            texture.offset.y = camera.position.y / 50; // Ajustez le décalage y selon vos besoins
+            // texture.offset.x = camera.position.x / 50; // Ajustez le décalage x selon vos besoins
+            // texture.offset.y = camera.position.y / 50; // Ajustez le décalage y selon vos besoins
             // Rotate objects slowly
             objects.forEach((object) => {
                 object.rotation.y += 0.004;
@@ -414,8 +443,8 @@
                     .easing(TWEEN.Easing.Quadratic.Out) // Smooth transition
                     .onComplete(() => { 
                         new TWEEN.Tween(camera.position)
-                        .to({ z: camera.position.z -0.5 }, 600) // Duration: 1000 milliseconds (1 second)
-                        .easing(TWEEN.Easing.Quadratic.Out) // Smooth transition
+                        .to({ z: camera.position.z -0.5 }, 500) // Duration: 1000 milliseconds (1 second)
+                        .easing(TWEEN.Easing.Sinusoidal.InOut) // Smooth transition
                         .onComplete(() => { isAnimating = false; }) // Animation complete callback
                         .start(); // Start the animation
                     
@@ -485,7 +514,48 @@ function getFresnelMat({rimHex = 0x0088ff, facingHex = 0x000000} = {})
   return fresnelMat;
 }
 
-     
+function getStarfield({ numStars = 500 } = {}) {
+  function randomSpherePoint() {
+    const radius = Math.random() * 25 + 25;
+    const u = Math.random();
+    const v = Math.random();
+    const theta = 2 * Math.PI * u;
+    const phi = Math.acos(2 * v - 1);
+    let x = radius * Math.sin(phi) * Math.cos(theta);
+    let y = radius * Math.sin(phi) * Math.sin(theta);
+    let z = radius * Math.cos(phi);
+
+    return {
+      pos: new THREE.Vector3(x, y, z),
+      hue: 0.6,
+      minDist: radius,
+    };
+  }
+  const verts = [];
+  const colors = [];
+  const positions = [];
+  let col;
+  for (let i = 0; i < numStars; i += 1) {
+    let p = randomSpherePoint();
+    const { pos, hue } = p;
+    positions.push(p);
+    col = new THREE.Color().setHSL(hue, 0.2, Math.random());
+    verts.push(pos.x, pos.y, pos.z);
+    colors.push(col.r, col.g, col.b);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
+  geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.2,
+    vertexColors: true,
+    map: new THREE.TextureLoader().load(
+      "circle.png"
+    ),
+  });
+  const points = new THREE.Points(geo, mat);
+  return points;
+}   
     </script>
 </body>
 </html>
