@@ -95,6 +95,16 @@
         let planet = null;
         scene = new THREE.Scene();
         var elapsed = 0;
+        let boundingBox;
+
+        let islands = [];
+
+
+
+        var planet1hover = Boolean();
+        var planet2hover = Boolean();
+        var planet3hover = Boolean();
+        var islandhover = Boolean();
 
         const texture = new THREE.TextureLoader().load( "space.png" );
         const loader = new THREE.GLTFLoader();
@@ -180,7 +190,7 @@
             // Create objects orbiting around the planet
             for (let i = 0; i < 4; i++) {
                 
-                let geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+                let geometry = new THREE.IcosahedronGeometry(((Math.random()*(0.4 - 0.2))+0.2), detail);
                 let material = new THREE.MeshBasicMaterial({ color: colors[i] });
                 let object = new THREE.Mesh(geometry, material); 
                 if(i>2)
@@ -190,11 +200,32 @@
                         gltf.scene.position.z = Math.sin(i * Math.PI / 2) * 3;
                         gltf.scene.position.y = -0.2;
                         gltf.scene.scale.set(0.005,0.005,0.005)
+                        boundingBox = new THREE.Box3().setFromObject(gltf.scene);
                         objects.push(gltf.scene);
                         scene.add(gltf.scene);
+
+                        let size = new THREE.Vector3();
+                        boundingBox.getSize(size);
+                        console.log(size)
+                        // Crée une géométrie de boîte avec les dimensions calculées
+                        let geometry = new THREE.BoxGeometry(size.x/2, size.y/2, size.z/2);
+
+                        // Crée un matériau pour la boîte
+                        let material = new THREE.MeshBasicMaterial({ color: 0xffffff,opacity:0.0 ,transparent:true}); // Couleur rouge pour l'exemple
+                        
+                        // Crée un mesh en utilisant la géométrie et le matériau
+                        let box = new THREE.Mesh(geometry, material);
+
+                        let center = new THREE.Vector3();
+                        boundingBox.getCenter(center);
+                        box.position.copy(center);
+                        
+                        scene.add(box);
+                        islands.push(box);
+                        // Ajouter la boîte englobante à un tableau pour référence ultérieure
+                        
                         
                 }, undefined, function ( error ) {
-
                 console.error( error );
 
             } );
@@ -204,6 +235,7 @@
                 object.position.x = Math.cos(i * Math.PI / 2) * 3;
                 object.position.z = Math.sin(i * Math.PI / 2) * 3;
                 objects.push(object);
+                islands.push(object);
                 scene.add(object);
                 }
             }
@@ -219,12 +251,32 @@
             sunLight.position.set(-2, 0.5, 1.5);
             scene.add(sunLight);
 		document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('click', onMouseClick);
 
         const manager = new THREE.LoadingManager( onload=function ( ) {document.getElementById('loadingscreen').classList.add('is-loaded');});
         
         
         }
-        
+        function onMouseClick(event){
+            if(planet1hover==true)
+            {
+                console.log("Clicked planet 1!");
+            }
+            if(planet2hover==true)
+            {
+                console.log("Clicked planet 2!");
+            }
+            if(planet3hover==true)
+            {
+                console.log("Clicked planet 3!");
+            }
+            if(islandhover==true)
+            {
+                console.log("Clicked island!");
+            }
+        }
+
+
 	    function onMouseMove(event) {
             // Calculate camera position based on mouse position
             
@@ -249,26 +301,54 @@
 
                 var raycaster = new THREE.Raycaster();
                 raycaster.setFromCamera( mouse, camera );
-                var intersects = raycaster.intersectObjects(objects, false);
+                const intersects = raycaster.intersectObjects(islands, false);
+
+                // Combiner les deux ensembles d'intersections
                 
                 if(intersects.length > 0) {
 
                     if (!intersects[0].object.originalColor) {
                     intersects[0].object.originalColor = intersects[0].object.material.color.clone();
                     }
-                    console.log(intersects[0].object);
                     intersects[0].object.material.color.setHex( 0xff9a00 );
+
+
+                    if(intersects[0].object==islands[0])
+                    {
+                        planet1hover = true;
+                    }
+
+
+                    if(intersects[0].object==islands[1])
+                    {
+                        planet2hover = true;
+                    }
+
+                    if(intersects[0].object==islands[2])
+                    {
+                        planet3hover = true;
+                    }
+
+                    if(intersects[0].object==islands[3])
+                    {
+                        islandhover = true;
+                    }
                 } 
                 else 
                 {
-                    objects.forEach(object => {
+                    islands.forEach(object => {
         if (object.originalColor) {
             object.material.color.copy(object.originalColor);
             delete object.originalColor; // Supprimez la propriété originalColor pour libérer la mémoire
+            planet1hover = false;
+            planet2hover = false;
+            planet3hover = false;
+            islandhover = false;
         }
     });
                 }
                 
+
         }
 
         function animate() {
@@ -279,6 +359,9 @@
             objects.forEach((object) => {
                 object.rotation.y += 0.004;
             });
+
+            islands[3].position.x = objects[3].position.x;
+            islands[3].position.z = objects[3].position.z;
 
             satellite.position.x = objects[3].position.x + Math.sin(elapsed*2) * 0.6;
             satellite.position.z = objects[3].position.z + Math.cos(elapsed*2) * 0.6;
@@ -300,7 +383,9 @@
         }
 
         function changeObject(direction) {
-            if (isAnimating) return; // Exit function if animation is in progress
+            if (isAnimating) {
+                return;
+            } // Exit function if animation is in progress
             isAnimating = true; // Set animation flag to true
 
             currentObjectIndex += direction;
