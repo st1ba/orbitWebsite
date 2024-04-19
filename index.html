@@ -114,6 +114,12 @@
         font-size: 24px;
         cursor: pointer;
         }
+
+        @media screen and (min-width: 1000px) {
+        .show-on-mobile {
+            display: none;
+        }
+        }       
     </style>
 </head>
 <body>
@@ -140,9 +146,10 @@
 
     
     <div id="container"></div>
-
-<!--     <div class="arrow left-arrow" onclick="changeObject(-1)" id="leftArrow"></div>
-    <div class="arrow right-arrow" onclick="changeObject(1)" id="rightArrow"></div> -->
+    <div class="show-on-mobile"> 
+        <div class="arrow left-arrow" onclick="changeObject(-1)" id="leftArrow"></div>
+        <div class="arrow right-arrow" onclick="changeObject(1)" id="rightArrow"></div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
