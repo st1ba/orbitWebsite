@@ -159,6 +159,8 @@
         var elapsed = 0;
         let boundingBox;
 
+        let venusIframe=0;
+
         let islands = [];
 
         let textgeo;
@@ -440,7 +442,7 @@
             
             let mouseX = (event.clientX / window.innerWidth) * 2 - 1;
             let mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-            if (/Android|BlackBerry|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) === false) {
+            if ((/Android|BlackBerry|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) === false) && venusIframe==0) {
                 camera.position.x = mouseX * 0.25;
                 camera.position.y = mouseY * 0.25;
             }
@@ -707,6 +709,7 @@ function getStarfield({ numStars = 500 } = {}) {
 }   
 
 function ouvrirIframe() {
+    venusIframe=1;
   document.getElementById("overlay").style.display = "block";
   setTimeout(function() {
     document.getElementById("overlay").style.bottom = "0";
@@ -714,6 +717,7 @@ function ouvrirIframe() {
 }
 
 function fermerIframe() {
+    venusIframe=0;
   document.getElementById("overlay").style.bottom = "-100%";
   setTimeout(function() {
     document.getElementById("overlay").style.display = "none";
