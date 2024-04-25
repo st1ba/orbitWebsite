@@ -17,6 +17,7 @@
         }
 
         .is-loaded{
+            visibility: hidden;
             opacity: 0;
             transition-duration: 3s;
         }
@@ -115,6 +116,15 @@
         cursor: pointer;
         }
 
+        .fermerRotation {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 24px;
+        cursor: pointer;
+        color:white;
+        }
+
         @media screen and (min-width: 1000px) {
         .show-on-mobile {
             display: none;
@@ -145,7 +155,8 @@
           <iframe src="https://fr.wikipedia.org/wiki/V%C3%A9nus_(plan%C3%A8te)" frameborder="0"></iframe>
         </div>
       </div>
-
+    
+      <span class="fermerRotation" onclick="quitZoom()">&times;</span>
     
     <div id="loadingscreen" class="loadingscreen">
         <div style="text-align : center; margin-top : 10%;">
@@ -185,30 +196,34 @@
         scene = new THREE.Scene();
         var elapsed = 0;
         let boundingBox;
-
+    let previousMouseX=0;
+    let previousMouseY=0;
         let venusIframe=0;
+        let isMouseDown=false;
+        let isRotating = 0;
+        let rotationSpeed = 0;
 
         let islands = [];
 
         let textgeo;
         let venustext;
 
-        new THREE.FontLoader().load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
-    // Créer la géométrie du texte une fois que la police est chargée
-        textgeo = new THREE.TextGeometry("VENUS", {
-        font: font,
-        size: 0.1,
-        height: 0.05,
-        curveSegments: 2,
-        bevelEnabled: true,
-        bevelThickness: 0.01,
-        bevelSize: 0.002,
-        bevelSegments: 5
-         });
-        let textMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("venus_texture.jpg"),transparent:true, opacity:0.99,side: THREE.DoubleSide });
-        venustext = new THREE.Mesh(textgeo, textMaterial);
-        scene.add(venustext);
-        } );
+    //     new THREE.FontLoader().load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
+    // // Créer la géométrie du texte une fois que la police est chargée
+    //     textgeo = new THREE.TextGeometry("VENUS", {
+    //     font: font,
+    //     size: 0.1,
+    //     height: 0.05,
+    //     curveSegments: 2,
+    //     bevelEnabled: true,
+    //     bevelThickness: 0.01,
+    //     bevelSize: 0.002,
+    //     bevelSegments: 5
+    //      });
+    //     let textMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("venus_texture.jpg"),transparent:true, opacity:0.99,side: THREE.DoubleSide });
+    //     venustext = new THREE.Mesh(textgeo, textMaterial);
+    //     scene.add(venustext);
+    //     } );
 
             
 
@@ -386,7 +401,7 @@
             objects[1].material=mat;
 
             mat = new THREE.MeshPhongMaterial( {
-    		map: new THREE.TextureLoader().load("frozen_texture.jpg") } );
+    		map: new THREE.TextureLoader().load("jupiter_texture.jpg") } );
             objects[2].material=mat;
 
             const sunLight = new THREE.DirectionalLight(0xffffff);
@@ -394,12 +409,24 @@
             scene.add(sunLight);
 		document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('click', onMouseClick);
+        
+        document.addEventListener('mousedown', () => {
+        isMouseDown = true;
+        previousMouseX = event.clientX;
+        previousMouseY = event.clientY;
+         });
+
+        document.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
 
         const manager = new THREE.LoadingManager( onload=function ( ) {document.getElementById('loadingscreen').classList.add('is-loaded');});
         
         
         }
         function onMouseClick(event){
+
+            
             if(planet1hover==true)
             {
                 console.log("Clicked planet 1!");
@@ -409,7 +436,7 @@
                     console.log(planetDroite);
                     console.log(planetGauche);
                 }
-                else if(planetGauche==objects[0])
+                else if((planetGauche==objects[0])&&isRotating==0)
                 {
                     changeObject(-1);
                 }
@@ -427,7 +454,7 @@
                     console.log(planetDroite);
                     console.log(planetGauche);
                 }
-                else if(planetGauche==objects[1])
+                else if((planetGauche==objects[1])&&isRotating==0)
                 {
                     changeObject(-1);
                 }
@@ -441,9 +468,13 @@
                     console.log(planetDroite);
                     console.log(planetGauche);
                 }
-                else if(planetGauche==objects[2])
+                else if((planetGauche==objects[2])&&isRotating==0)
                 {
                     changeObject(-1);
+                }
+                else
+                {
+                    zoomCamera();
                 }
             }
             if(islandhover==true)
@@ -455,7 +486,7 @@
                     console.log(planetDroite);
                     console.log(planetGauche);
                 }
-                else if(planetGauche==objects[3])
+                else if((planetGauche==objects[3])&&isRotating==0)
                 {
                     changeObject(-1);
                 }
@@ -465,11 +496,45 @@
 
 	    function onMouseMove(event) {
             // Calculate camera position based on mouse position
-            
-            
+
             let mouseX = (event.clientX / window.innerWidth) * 2 - 1;
             let mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-            if ((/Android|BlackBerry|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) === false) && venusIframe==0) {
+            const mouseXX = event.clientX;
+            const mouseYY = event.clientY;
+            
+            if (isMouseDown && isRotating == 1) {
+            // Calculer la différence de position de la souris par rapport à la position précédente
+            const deltaX = mouseXX - previousMouseX;
+            const deltaY = mouseYY - previousMouseY;
+
+            // Calculer la vitesse de déplacement de la souris
+            const speedX = deltaX * 0.002;
+            const speedY = deltaY * 0.001;
+
+            // Ajouter l'inertie au mouvement de la planète en fonction de la vitesse de la souris
+            objects[2].rotation.x += speedY;
+            objects[2].rotation.y += speedX;
+
+            rotationSpeed=speedY*2;
+            // Appliquer un amortissement pour réduire progressivement la vitesse de rotation
+            const dampingFactor = 0.9; // Facteur d'amortissement
+            previousSpeedX *= dampingFactor;
+            previousSpeedY *= dampingFactor;
+
+            // Limiter la rotation de la planète selon des angles maximums
+            objects[2].rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, objects[2].rotation.x));
+
+            // Mettre à jour les coordonnées de la souris
+            previousMouseX = mouseXX;
+            previousMouseY = mouseYY;
+        } else {
+            // Si la souris est relâchée, mettre à jour les vitesses précédentes
+            previousSpeedX = 0;
+            previousSpeedY = 0;
+        }
+
+
+            if ((/Android|BlackBerry|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) === false) && venusIframe==0 && isRotating==0) {
                 camera.position.x = mouseX * 0.25;
                 camera.position.y = mouseY * 0.25;
             }
@@ -542,16 +607,21 @@
             // texture.offset.x = camera.position.x / 50; // Ajustez le décalage x selon vos besoins
             // texture.offset.y = camera.position.y / 50; // Ajustez le décalage y selon vos besoins
             // Rotate objects slowly
-            objects.forEach((object) => {
+            //if(isRotating==0)
+           // {
+                objects.forEach((object) => {
                 object.rotation.y += 0.004;
-            });
+                });
+           // }
+                objects[2].rotation.y+=rotationSpeed;
+                rotationSpeed=rotationSpeed+((0-rotationSpeed)/10);
 
             islands[3].position.x = objects[3].position.x;
             islands[3].position.z = objects[3].position.z;
 
-            venustext.position.x = objects[0].position.x-0.18;
-            venustext.position.z = objects[0].position.z;
-            venustext.position.y=0.35+( Math.sin(elapsed*20)*0.01);
+            // venustext.position.x = objects[0].position.x-0.18;
+            // venustext.position.z = objects[0].position.z;
+            // venustext.position.y=0.35+( Math.sin(elapsed*20)*0.01);
 
             satellite.position.x = objects[3].position.x + Math.sin(elapsed*2) * 0.6;
             satellite.position.z = objects[3].position.z + Math.cos(elapsed*2) * 0.6;
@@ -750,6 +820,34 @@ function fermerIframe() {
     document.getElementById("overlay").style.display = "none";
   }, 500);
 }
+
+function zoomCamera() {
+    // Animer la caméra pour se déplacer vers la cible
+    if(isRotating==0)
+    {
+        var zoomTween = new TWEEN.Tween(camera.position)
+        .to({ z: 3.6 }, 1000) // Destination : -100 unités sur l'axe z
+        .easing(TWEEN.Easing.Quadratic.InOut) // Effet de lissage
+        .start();
+        isRotating=1;
+    }
+
+}
+
+// Fonction pour quitter la fonctionnalité de zoom
+function quitZoom() {
+    if(isRotating==1)
+    {
+    // Animer la caméra pour revenir à sa position initiale
+    var quitTween = new TWEEN.Tween(camera.position)
+        .to({ z: 4 }, 1000) // Destination : 5 unités sur l'axe z (position initiale)
+        .easing(TWEEN.Easing.Quadratic.InOut) // Effet de lissage
+        .start()
+        .onComplete(() => {isRotating=0;});
+    }
+}
+
+
     </script>
 </body>
 </html>
